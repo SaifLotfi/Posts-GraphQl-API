@@ -31,7 +31,7 @@ app.use('/feed', feedRouter);
 app.use((err,req,res,next)=>{
     console.log(err);
     const message = err.message;
-    const statusCode = err.statusCode;
+    const statusCode = err.statusCode || 500;
     res.status(statusCode).json({
         message:message
     });

@@ -2,20 +2,12 @@ const express = require('express');
 const Post = require('../models/post');
 const { validationResult } = require('express-validator');
 exports.getPosts = (req, res, next) => {
-    res.status(200).json({
-        posts: [
-            {
-                _id: '1',
-                title: 'First Post',
-                content: 'This is the first post!',
-                imageUrl: 'images/duck.jpg',
-                creator: {
-                    name: 'Saif',
-                },
-                createdAt: new Date(),
-            },
-        ],
-    });
+    Post.find().then(posts=>{
+        res.status(200).json({
+            message:'Posts Fetched!',
+            posts:posts
+        });
+    }).catch(next);
 };
 
 exports.postPost = (req, res, next) => {
@@ -30,7 +22,7 @@ exports.postPost = (req, res, next) => {
     const post = new Post({
         title: title,
         content: content,
-        imageUrl: 'images/monkey',
+        imageUrl: 'images/monkey.jpg',
         creator: { name: 'Saif' },
     });
     post.save()
@@ -47,3 +39,18 @@ exports.postPost = (req, res, next) => {
             next(err);
         });
 };
+
+exports.getPost = (req,res,next)=>{
+    const postId = req.params.postId;
+    Post.findById(postId).then(post=>{
+        if(!post){
+            const error = new Error('Post Not Found.');
+            error.statusCode = 404;
+            throw error;
+        }
+        return res.status(200).json({
+            message:'Post Fetched!',
+            post:post
+        });
+    }).catch(next);
+}

@@ -11,10 +11,12 @@ router.get('/posts', feedControllers.getPosts);
 router.post(
     '/post',
     [
-        body('title', 'Invalid Title!').trim().isLength({ min: 7 }),
+        body('title', 'Invalid Title!').trim().isLength({ min: 5 }),
         body('content', 'Invalid Content!').trim().isLength({ min: 5 }),
     ],
     feedControllers.postPost
 );
+
+router.get('/post/:postId',feedControllers.getPost);
 
 module.exports = router;
