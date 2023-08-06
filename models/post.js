@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { post } = require('../routes/feed');
+
 const Schema = mongoose.Schema;
 
 const postSchema = new Schema({

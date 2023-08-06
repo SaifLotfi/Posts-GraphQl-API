@@ -11,7 +11,7 @@ router.get('/posts', feedControllers.getPosts);
 router.post(
     '/post',
     [
-        body('title', 'Invalid Title!').trim().isLength({ min: 5 }),
+        body('title', 'Invalid Title!').trim().isLength({ min: 7 }),
         body('content', 'Invalid Content!').trim().isLength({ min: 5 }),
     ],
     feedControllers.postPost

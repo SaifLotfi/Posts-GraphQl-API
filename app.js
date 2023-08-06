@@ -1,6 +1,6 @@
 const host = 'localhost';
 const port = 8080;
-
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -10,6 +10,8 @@ const app = express();
 const feedRouter = require('./routes/feed.js');
 
 app.use(bodyParser.json());
+
+app.use('/images',express.static(path.join(__dirname,'images')));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,6 +27,15 @@ app.use((req, res, next) => {
 });
 
 app.use('/feed', feedRouter);
+
+app.use((err,req,res,next)=>{
+    console.log(err);
+    const message = err.message;
+    const statusCode = err.statusCode;
+    res.status(statusCode).json({
+        message:message
+    });
+});
 
 mongoose
     .connect(
