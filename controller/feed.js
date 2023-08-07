@@ -4,11 +4,19 @@ const path = require('path');
 const Post = require('../models/post');
 const { validationResult } = require('express-validator');
 exports.getPosts = (req, res, next) => {
-    Post.find()
+    const currentPage = req.query.page||1;
+    const perPage = 2;
+    let totalPosts;
+    Post.count().then(totalPosts=>{
+        totalPosts = totalPosts;
+        console.log(totalPosts);
+        return Post.find().skip((currentPage-1)*perPage).limit(perPage)
+    })
         .then((posts) => {
             res.status(200).json({
                 message: 'Posts Fetched!',
                 posts: posts,
+                totalItems:totalPosts
             });
         })
         .catch(next);
