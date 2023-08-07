@@ -55,8 +55,10 @@ app.use((err,req,res,next)=>{
     console.log(err);
     const message = err.message;
     const statusCode = err.statusCode || 500;
+    const data = err.data;
     res.status(statusCode).json({
-        message:message
+        message:message,
+        data:data
     });
 });
 
