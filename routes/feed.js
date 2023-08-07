@@ -17,6 +17,18 @@ router.post(
     feedControllers.postPost
 );
 
-router.get('/post/:postId',feedControllers.getPost);
+router.get('/post/:postId', feedControllers.getPost);
+
+router.put(
+    '/post/:postId',
+    [
+        body('title', 'Invalid Title!').trim().isLength({ min: 5 }),
+        body('content', 'Invalid Content!').trim().isLength({ min: 5 }),
+    ],
+    feedControllers.updatePost
+);
+
+router.delete('/post/:postId', feedControllers.deletePost);
+
 
 module.exports = router;
