@@ -2,21 +2,25 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const Post = require('../models/post');
+const User = require('../models/user');
 const { validationResult } = require('express-validator');
 exports.getPosts = (req, res, next) => {
-    const currentPage = req.query.page||1;
+    const currentPage = req.query.page || 1;
     const perPage = 2;
     let totalPosts;
-    Post.count().then(totalPosts=>{
-        totalPosts = totalPosts;
-        console.log(totalPosts);
-        return Post.find().skip((currentPage-1)*perPage).limit(perPage)
-    })
+    Post.count()
+        .then((totalPosts) => {
+            totalPosts = totalPosts;
+            console.log(totalPosts);
+            return Post.find()
+                .skip((currentPage - 1) * perPage)
+                .limit(perPage);
+        })
         .then((posts) => {
             res.status(200).json({
                 message: 'Posts Fetched!',
                 posts: posts,
-                totalItems:totalPosts
+                totalItems: totalPosts,
             });
         })
         .catch(next);
@@ -42,14 +46,34 @@ exports.postPost = (req, res, next) => {
         title: title,
         content: content,
         imageUrl: imageUrl,
-        creator: { name: 'Saif' },
+        creator: req.userId,
     });
+    const creatorId = req.userId;
+    let creator;
     post.save()
         .then((post) => {
-            res.status(201).json({
-                message: 'The Post Has Been Created Successfully!',
-                post: post,
-            });
+            User.findById(creatorId)
+                .then((user) => {
+                    if (!user) {
+                        const error = new Error('User Not Found!');
+                        error.statusCode = 404;
+                        throw error;
+                    }
+                    creator = user;
+                    user.posts.push(post);
+                    return user.save();
+                })
+                .then((result) => {
+                    res.status(201).json({
+                        message: 'The Post Has Been Created Successfully!',
+                        post: post,
+                        creator: {
+                            creatorId: creator._id,
+                            creatorName: creator.name,
+                        },
+                    });
+                })
+                .catch(next);
         })
         .catch(next);
 };
@@ -99,6 +123,11 @@ exports.updatePost = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
+            if (post.creator.toString() !== req.userId) {
+                const error = new Error('Not authorized!');
+                error.statusCode = 403;
+                throw error;
+            }
             if (post.imageUrl !== imageUrl) {
                 deleteFile(post.imageUrl);
             }
@@ -125,12 +154,18 @@ exports.deletePost = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
+            if (post.creator.toString() !== req.userId) {
+                const error = new Error('Not authorized!');
+                error.statusCode = 403;
+                throw error;
+            }
             deleteFile(post.imageUrl);
             return Post.findOneAndDelete(postId);
-        }).then(result=>{
+        })
+        .then((result) => {
             console.log(result);
             return res.status(200).json({
-                message:'Post was deleted Successfully!'
+                message: 'Post was deleted Successfully!',
             });
         })
         .catch(next);
