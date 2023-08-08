@@ -136,7 +136,7 @@ exports.updatePost = (req, res, next) => {
             post.imageUrl = imageUrl;
             return post.save();
         })
-        .then((post) => {
+        .then((post) => { 
             return res.status(200).json({
                 message: 'Post Updated Correctly!',
                 post: post,
@@ -169,7 +169,9 @@ exports.deletePost = (req, res, next) => {
             });
         })
         .catch(next);
+
 };
+
 
 const deleteFile = (filePath) => {
     filePath = path.join(__dirname, '..', filePath);
