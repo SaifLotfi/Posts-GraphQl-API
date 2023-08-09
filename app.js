@@ -11,6 +11,7 @@ const app = express();
 const feedRouter = require('./routes/feed.js');
 const authRouter = require('./routes/auth.js');
 const userRouter = require('./routes/user.js');
+const { Socket } = require('socket.io');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -74,9 +75,18 @@ mongoose
         }
     )
     .then((result) => {
-        app.listen(port, () => {
+        const server = app.listen(port, () => {
             console.log(`Server is running on http://${host}:${port}`);
         });
+        const io = require('./socket.js').init(server, {
+            cors: {
+                origin: "http://localhost:3000",
+                methods: ["GET", "POST"]
+            }
+        });
+        io.on('connection',socket=>{
+            console.log('Client Connected!');
+        })
     }).catch(err=>{
         console.log(err);
     })

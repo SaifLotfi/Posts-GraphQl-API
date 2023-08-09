@@ -1,9 +1,11 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const io = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
+const { emit } = require('process');
 exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
     const perPage = 2;
@@ -12,6 +14,7 @@ exports.getPosts = async (req, res, next) => {
         console.log(totalPosts);
         const posts = await Post.find()
             .populate('creator')
+            .sort({createdAt:-1})
             .skip((currentPage - 1) * perPage)
             .limit(perPage);
         res.status(200).json({
@@ -57,6 +60,10 @@ exports.postPost = async (req, res, next) => {
         }
         let creator = user;
         user.posts.push(savedPost);
+        io.getIO().emit('posts',{
+            action:'create',
+            post:post
+        });
         const result = await user.save();
         res.status(201).json({
             message: 'The Post Has Been Created Successfully!',
@@ -107,13 +114,13 @@ exports.updatePost = async (req, res, next) => {
     }
 
     try {
-        const updatedPost = await Post.findById(postId);
+        const updatedPost = await Post.findById(postId).populate('creator');
         if (!updatedPost) {
             const error = new Error('No Such Post Found!');
             error.statusCode = 404;
             throw error;
         }
-        if (updatedPost.creator.toString() !== req.userId) {
+        if (updatedPost.creator._id.toString() !== req.userId) {
             const error = new Error('Not authorized!');
             error.statusCode = 403;
             throw error;
@@ -125,7 +132,10 @@ exports.updatePost = async (req, res, next) => {
         updatedPost.content = content;
         updatedPost.imageUrl = imageUrl;
         const savedPost = await updatedPost.save();
-
+        io.getIO().emit('posts',{
+            action:'update',
+            post:savedPost
+        });
         return res.status(200).json({
             message: 'Post Updated Correctly!',
             post: savedPost,
@@ -152,6 +162,10 @@ exports.deletePost = async (req, res, next) => {
         }
         deleteFile(post.imageUrl);
         const updatedPost = await Post.findOneAndDelete(postId);
+        io.getIO().emit('posts',{
+            action:'delete',
+            post:postId
+        });
         console.log(updatedPost);
         return res.status(200).json({
             message: 'Post was deleted Successfully!',
