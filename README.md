@@ -1,2 +1,2 @@
-# Messages-REST-API
-Simple REST API Application
+# Posts-GraphQl-API
+Simple GraphQl API Application
